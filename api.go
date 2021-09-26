@@ -12,9 +12,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-var responseStatus = promauto.NewCounterVec(prometheus.CounterOpts{
-	Name: "http_response_status",
-}, []string{"uri", "code"})
+var (
+	responseStatus = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "http_response_status",
+	}, []string{"uri", "code"})
+
+	requestDuration = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "http_request_duration_s",
+	}, []string{"uri"})
+)
 
 func parseRateLimitHeaders(headers http.Header) (reset time.Time, err error) {
 	values := headers["X-Ratelimit-Reset"]
@@ -39,11 +45,13 @@ func do(client *http.Client, uri string, response interface{}) (rateLimitReset t
 		req.Header["Authorization"] = []string{fmt.Sprintf("Bearer %s", apiKey)}
 	}
 
+	epoch := time.Now()
 	res, err := client.Do(req)
+	elapsed := time.Since(epoch)
+	requestDuration.WithLabelValues(uri).Set(elapsed.Seconds())
 	if err != nil {
 		return
 	}
-
 	responseStatus.WithLabelValues(uri, fmt.Sprintf("%d", res.StatusCode)).Inc()
 
 	rateLimitReset, err = parseRateLimitHeaders(res.Header)
