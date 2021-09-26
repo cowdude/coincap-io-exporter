@@ -25,7 +25,7 @@ func Markets(client *http.Client) (result []Market, rateLimitReset time.Time, er
 	var response struct {
 		Data []Market
 	}
-	rateLimitReset, err = do(client, "/markets?limit=100", &response)
+	rateLimitReset, err = do(client, "/markets?limit=2000", &response)
 	result = response.Data
 	return
 }

@@ -24,7 +24,7 @@ func Assets(client *http.Client) (result []Asset, rateLimitReset time.Time, err 
 	var response struct {
 		Data []Asset
 	}
-	rateLimitReset, err = do(client, "/assets?limit=100", &response)
+	rateLimitReset, err = do(client, "/assets?limit=2000", &response)
 	result = response.Data
 	return
 }
